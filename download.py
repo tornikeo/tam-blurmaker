@@ -44,6 +44,12 @@ def download_checkpoint_from_google_drive(file_id, folder, filename):
 
     return filepath
 
+from torch.utils import model_zoo
+
+model_urls = {
+    "resnet18": "https://download.pytorch.org/models/resnet18-5c106cde.pth",
+    "resnet50": "https://download.pytorch.org/models/resnet50-19c8e357.pth",
+}
 
 if __name__ == "__main__":
     # check and download checkpoints if needed
@@ -72,3 +78,5 @@ if __name__ == "__main__":
     e2fgvi_checkpoint = download_checkpoint_from_google_drive(
         e2fgvi_checkpoint_id, folder, e2fgvi_checkpoint
     )
+    model_zoo.load_url(model_urls["resnet50"])
+    model_zoo.load_url(model_urls["resnet18"])
