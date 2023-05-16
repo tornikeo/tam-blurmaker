@@ -1,8 +1,10 @@
+volumes:
+  cache:
 services:
   app:
     environment:
       - NVIDIA_DISABLE_REQUIRE=1
     build: .
     volumes:
+      - cache:/root/.cache
       - .:/workdir
-      
