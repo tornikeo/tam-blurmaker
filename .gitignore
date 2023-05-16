@@ -11,3 +11,4 @@ images/
 test_sample/
 result/
 .env
+*.json

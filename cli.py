@@ -7,7 +7,10 @@ import numpy as np
 import os
 import sys
 from pathlib import Path
-
+import numpy as np
+from pathlib import Path
+from matplotlib import pyplot as plt
+import json
 sys.path.append(sys.path[0] + "/tracker")
 sys.path.append(sys.path[0] + "/tracker/model")
 from track_anything import TrackingAnything
@@ -664,6 +667,32 @@ if __name__ == "__main__":
         interactive_state=interactive_state,
         mask_dropdown=[],
     )
+    outputs = []
+
+    def bbox2(img):
+        rows = np.any(img, axis=1)
+        cols = np.any(img, axis=0)
+        try:
+            rmin, rmax = np.where(rows)[0][[0, -1]].tolist()
+            cmin, cmax = np.where(cols)[0][[0, -1]].tolist()
+            return rmin, rmax, cmin, cmax
+        except IndexError:
+            return None
+    # video_state["masks"][video_state["select_frame_number"]] = mask
+    for frame_num, mask in video_state["masks"].items():
+        # print(mask)
+        # print(i)
+        # mask = np.load(mask)
+        # Get bounding box [x,y,x,y] from binary mask
+        bbox = bbox2(mask > 0)
+        if bbox is not None:
+            # Write outputs in {1: {'class': 0, 'bbox': [0, 0, 0, 0], 'score': ''}} format
+            outputs.append({frame_num: {'class': 0, 'bbox': bbox, 'score': ''}})
+
+    # Write outputs to json
+    Path(args.output).open('w').write(json.dumps({
+        'results': outputs
+    }, indent=4))
 # title = """<p><h1 align="center">Track-Anything</h1></p>
 #     """
 # description = """<p>Gradio demo for Track Anything, a flexible and interactive tool for video object tracking, segmentation, and inpainting. I To use it, simply upload your video, or click one of the examples to load them. Code: <a href="https://github.com/gaomingqi/Track-Anything">https://github.com/gaomingqi/Track-Anything</a> <a href="https://huggingface.co/spaces/watchtowerss/Track-Anything?duplicate=true"><img style="display: inline; margin-top: 0em; margin-bottom: 0em" src="https://bit.ly/3gLdBN6" alt="Duplicate Space" /></a></p>"""
