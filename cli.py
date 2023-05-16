@@ -553,7 +553,7 @@ def parse_argument():
     parser.add_argument('--input', type=Path, default=Path('test_sample/mall_480.mp4'))
     parser.add_argument('--track_data', type=Path, default=Path('test_sample/mall_480/sample_track_person.json'))
     parser.add_argument("--device", type=str, default="cpu")
-    parser.add_argument("--sam_model_type", type=str, default="vit_h")
+    parser.add_argument("--sam_model_type", type=str, default="vit_b")
     parser.add_argument('--output_video', type=Path, default='result.mp4')
     parser.add_argument('--output', type=Path, default='output.json')
     parser.add_argument("--debug", type=bool, default=True)
