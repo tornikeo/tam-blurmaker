@@ -679,7 +679,7 @@ if __name__ == "__main__":
         except IndexError:
             return None
     # video_state["masks"][video_state["select_frame_number"]] = mask
-    for frame_num, mask in video_state["masks"].items():
+    for frame_num, mask in enumerate(video_state["masks"]):
         # print(mask)
         # print(i)
         # mask = np.load(mask)
