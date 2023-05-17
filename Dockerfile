@@ -8,6 +8,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY download.py .
 RUN python download.py
+RUN mim install mmcv
 COPY . .
 # ENTRYPOINT python cli.py
 CMD python cli.py

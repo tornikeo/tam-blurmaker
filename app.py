@@ -10,7 +10,6 @@ import pickle
 sys.path.append(sys.path[0] + "/tracker")
 sys.path.append(sys.path[0] + "/tracker/model")
 from track_anything import TrackingAnything
-from track_anything import parse_augment
 import requests
 import json
 import torchvision
@@ -19,14 +18,14 @@ from tools.painter import mask_painter
 import psutil
 import time
 
-try:
-    from mmcv.cnn import ConvModule
-except:
-    os.system("mim install mmcv")
+# try:
+#     from mmcv.cnn import ConvModule
+# except:
+#     os.system("mim install mmcv")
 from pathlib import Path
 
 save_dir_root = Path(
-    "/home/tornikeo/Documents/work/scalexa/otrack/object_tracking/store/Track-Anything/test_sample/mall_480"
+    "test_sample/family_480"
 )
 
 
@@ -172,6 +171,16 @@ def run_example(example):
 # get the select frame from gradio slider
 def select_template(image_selection_slider, video_state, interactive_state):
     # images = video_state[1]
+    print(f"Calling select_template() with image_selection_slider: {image_selection_slider}")
+    pickle.dump(
+        dict(
+            image_selection_slider = image_selection_slider,
+            video_state = video_state, 
+            interactive_state = interactive_state,
+        ),
+        (save_dir_root / "select_template_args.pkl").open("wb"),
+    )
+
     image_selection_slider -= 1
     video_state["select_frame_number"] = image_selection_slider
 
@@ -205,6 +214,15 @@ def select_template(image_selection_slider, video_state, interactive_state):
 
 # set the tracking end frame
 def get_end_number(track_pause_number_slider, video_state, interactive_state):
+    print(f"Calling get_end_number() with track_pause_number_slider: {track_pause_number_slider}")
+    pickle.dump(
+        dict(
+            track_pause_number_slider = track_pause_number_slider,
+            video_state = video_state, 
+            interactive_state = interactive_state,
+        ),
+        (save_dir_root / "get_end_number_args.pkl").open("wb"),
+    )
     interactive_state["track_end_number"] = track_pause_number_slider
     operation_log = [
         ("", ""),
@@ -576,8 +594,40 @@ def generate_video_from_frames(frames, output_path, fps=30):
     return output_path
 
 
+from pathlib import Path
+
+
+def parse_argument():
+    parser = argparse.ArgumentParser()
+    # parser.add_argument('--input', type=Path, default=None)
+    # parser.add_argument('--frame_start', type=int, default=None)
+    # parser.add_argument('--frame_end', type=int, default=None)
+    # parser.add_argument('--detect_faces', action="store_true", default=False)
+    # parser.add_argument('--track_object', type=str, default="[127, 214, 96, 293, 348]")
+    # parser.add_argument('--track_backwards', action="store_true", default=False)
+    # parser.add_argument('--output', type=str, default='output.json')
+    # parser.add_argument('--output-video', type=str, default='out.mp4')
+
+    # parser.add_argument('--input_video', type=Path, required=True)
+
+    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--sam_model_type", type=str, default="vit_b")
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=6080,
+        help="only useful when running gradio applications",
+    )
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--mask_save", default=True)
+    args = parser.parse_args()
+
+    if args.debug:
+        print(args)
+    return args
+
 # args, defined in track_anything.py
-args = parse_augment()
+args = parse_argument()
 
 # check and download checkpoints if needed
 SAM_checkpoint_dict = {
@@ -917,22 +967,24 @@ with gr.Blocks() as iface:
     # set example
     gr.Markdown("##  Examples")
     gr.Examples(
-        examples=[
-            os.path.join(os.path.dirname(__file__), "./test_sample/", test_sample)
-            for test_sample in [
-                "test-sample8.mp4",
-                "test-sample4.mp4",
-                "test-sample2.mp4",
-                "test-sample13.mp4",
-            ]
-        ],
+        # examples=[
+        #     os.path.join(os.path.dirname(__file__), "./test_sample/", test_sample)
+        #     for test_sample in [
+        #         "test-sample8.mp4",
+        #         "test-sample4.mp4",
+        #         "test-sample2.mp4",
+        #         "test-sample13.mp4",
+        #     ]
+        # ],
+        examples=[str(e) for e in list((Path(__file__).parent / "test_sample").glob("*.mp4"))],
         fn=run_example,
         inputs=[video_input],
         outputs=[video_input],
         # cache_examples=True,
     )
-iface.queue(concurrency_count=1)
+# iface.queue(concurrency_count=1)
 iface.launch(
-    debug=True, enable_queue=True, server_port=args.port, server_name="0.0.0.0"
+    debug=True, #enable_queue=True, 
+    server_port=args.port, server_name="0.0.0.0"
 )
 # iface.launch(debug=True, enable_queue=True)

@@ -646,9 +646,23 @@ if __name__ == "__main__":
         args.input,
         video_state,
     )
+    points = args.track_data['points']
+
+    template_frame, video_state, interactive_state, run_status=select_template(
+        points['frame'], 
+        video_state, 
+        interactive_state
+    )
+
+    # track_pause_number_slider.release(
+    #     fn=get_end_number,
+    #     inputs=[track_pause_number_slider, video_state, interactive_state],
+    #     outputs=[template_frame, interactive_state, run_status],
+    #     api_name="end_image",
+    # )
+
     evt = argparse.Namespace()
     evt.index = [0, 0]
-    points = args.track_data['points']
     template_frame, video_state, interactive_state, run_status = sam_refine(
         model=model,
         video_state=video_state,

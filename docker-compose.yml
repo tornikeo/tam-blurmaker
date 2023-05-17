@@ -8,3 +8,5 @@ services:
     volumes:
       - cache:/root/.cache
       - .:/workdir
+    ports:
+      - 6080:6080
