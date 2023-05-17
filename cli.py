@@ -569,8 +569,12 @@ def parse_argument():
     # parser.add_argument("--mask_save", default=False)
 
     args = parser.parse_args()
+    print(f"Reading tracking arguments from {args.track_data}...")
     args.track_data = json.load(open(args.track_data, "r"))
     args.mask_save = True
+
+    print(f"Resulting video will be saved to {args.output_video}...")
+    print(f"Resulting json output will be saved to {args.output}...")
 
     print(args)
     return args

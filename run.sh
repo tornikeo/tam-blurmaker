@@ -1,2 +1,2 @@
 #!/bin/bash
-DOCKER_BUILTKIT=1 docker compose build && docker compose run -it --rm app
+DOCKER_BUILTKIT=1 docker compose build && docker compose run -it --rm app python cli.py
