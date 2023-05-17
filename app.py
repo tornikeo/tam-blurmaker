@@ -91,8 +91,7 @@ def get_frames_from_video(video_input, video_state):
     Return
         [[0:nearest_frame], [nearest_frame:], nearest_frame]
     """
-    print("Calling get_frames_from_video() with following args")
-    print(f"video_input: {video_input} \nvideo_state: {video_state}")
+    print("Calling get_frames_from_video() ")
 
     video_path = video_input
     frames = []
@@ -172,14 +171,14 @@ def run_example(example):
 def select_template(image_selection_slider, video_state, interactive_state):
     # images = video_state[1]
     print(f"Calling select_template() with image_selection_slider: {image_selection_slider}")
-    pickle.dump(
-        dict(
-            image_selection_slider = image_selection_slider,
-            video_state = video_state, 
-            interactive_state = interactive_state,
-        ),
-        (save_dir_root / "select_template_args.pkl").open("wb"),
-    )
+    # pickle.dump(
+    #     dict(
+    #         image_selection_slider = image_selection_slider,
+    #         video_state = video_state, 
+    #         interactive_state = interactive_state,
+    #     ),
+    #     (save_dir_root / "select_template_args.pkl").open("wb"),
+    # )
 
     image_selection_slider -= 1
     video_state["select_frame_number"] = image_selection_slider
@@ -215,14 +214,14 @@ def select_template(image_selection_slider, video_state, interactive_state):
 # set the tracking end frame
 def get_end_number(track_pause_number_slider, video_state, interactive_state):
     print(f"Calling get_end_number() with track_pause_number_slider: {track_pause_number_slider}")
-    pickle.dump(
-        dict(
-            track_pause_number_slider = track_pause_number_slider,
-            video_state = video_state, 
-            interactive_state = interactive_state,
-        ),
-        (save_dir_root / "get_end_number_args.pkl").open("wb"),
-    )
+    # pickle.dump(
+    #     dict(
+    #         track_pause_number_slider = track_pause_number_slider,
+    #         video_state = video_state, 
+    #         interactive_state = interactive_state,
+    #     ),
+    #     (save_dir_root / "get_end_number_args.pkl").open("wb"),
+    # )
     interactive_state["track_end_number"] = track_pause_number_slider
     operation_log = [
         ("", ""),
@@ -259,24 +258,22 @@ def sam_refine(
 
     print(
         f"""
-    video_state={video_state}
     point_prompt={point_prompt}
     click_state={click_state}
-    interactive_state={interactive_state}
     evt={evt}
     """
     )
     ## Save the args into pickle
-    pickle.dump(
-        dict(
-            video_state=video_state,
-            point_prompt=point_prompt,
-            click_state=click_state,
-            interactive_state=interactive_state,
-            evt_index=evt.index,
-        ),
-        (save_dir_root / "sam_refine_args.pkl").open("wb"),
-    )
+    # pickle.dump(
+    #     dict(
+    #         video_state=video_state,
+    #         point_prompt=point_prompt,
+    #         click_state=click_state,
+    #         interactive_state=interactive_state,
+    #         evt_index=evt.index,
+    #     ),
+    #     (save_dir_root / "sam_refine_args.pkl").open("wb"),
+    # )
 
     if point_prompt == "Positive":
         coordinate = "[[{},{},1]]".format(evt.index[0], evt.index[1])
@@ -387,23 +384,23 @@ def show_mask(video_state, interactive_state, mask_dropdown):
 
 # tracking vos
 def vos_tracking_video(video_state, interactive_state, mask_dropdown):
-    print("Calling vos_tracking_video() with following args")
-    print(
-        f"""
-    video_state={video_state}
-    interactive_state={interactive_state}
-    mask_dropdown={mask_dropdown}
-    """
-    )
+    print("Calling vos_tracking_video()")
+    # print(
+    #     f"""
+    # video_state={video_state}
+    # interactive_state={interactive_state}
+    # mask_dropdown={mask_dropdown}
+    # """
+    # )
     ## Save the args into pickle
-    pickle.dump(
-        dict(
-            video_state=video_state,
-            interactive_state=interactive_state,
-            mask_dropdown=mask_dropdown,
-        ),
-        (save_dir_root / "vos_tracking_video_args.pkl").open("wb"),
-    )
+    # pickle.dump(
+    #     dict(
+    #         video_state=video_state,
+    #         interactive_state=interactive_state,
+    #         mask_dropdown=mask_dropdown,
+    #     ),
+    #     (save_dir_root / "vos_tracking_video_args.pkl").open("wb"),
+    # )
     operation_log = [
         ("", ""),
         (
@@ -431,7 +428,7 @@ def vos_tracking_video(video_state, interactive_state, mask_dropdown):
         for i in range(1, len(mask_dropdown)):
             mask_number = int(mask_dropdown[i].split("_")[1]) - 1
             template_mask = np.clip(
-                template_mask
+                template_mask   
                 + interactive_state["multi_mask"]["masks"][mask_number]
                 * (mask_number + 1),
                 0,
