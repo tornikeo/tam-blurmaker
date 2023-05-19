@@ -108,7 +108,7 @@ def get_frames_from_video(model, video_input, video_state={}):
             ret, frame = cap.read()
             if ret == True:
                 current_memory_usage = psutil.virtual_memory().percent
-                if i % 2 == 0:
+                if i % 4 == 0 and i >= video_state['track_start_number']:
                     frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                 if current_memory_usage > 90:
                     operation_log = [
@@ -169,7 +169,7 @@ def run_example(example):
 
 
 # get the select frame from gradio slider
-def select_template(image_selection_slider, video_state, interactive_state):
+def select_template(model, image_selection_slider, video_state, interactive_state):
     # images = video_state[1]
     image_selection_slider -= 1
     video_state["select_frame_number"] = image_selection_slider
@@ -545,6 +545,8 @@ def generate_video_from_frames(frames, output_path, fps=30):
     return output_path
 
 
+
+
 def parse_argument():
     parser = argparse.ArgumentParser()
     # parser.add_argument('--input', type=Path, default=None)
@@ -555,7 +557,7 @@ def parse_argument():
 
     parser.add_argument('--input', type=Path, default=Path('test_sample/mall_480.mp4'))
     parser.add_argument('--track_data', type=Path, default=Path('test_sample/mall_480/sample_track_person.json'))
-    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--sam_model_type", type=str, default="vit_b")
     parser.add_argument('--output_video', type=Path, default='result.mp4')
     parser.add_argument('--output', type=Path, default='output.json')
@@ -579,6 +581,18 @@ def parse_argument():
     print(args)
     return args
 
+def default_args():
+    args = argparse.Namespace()
+    args.input = Path("test_sample/mall_480.mp4")
+    args.track_data = Path("test_sample/mall_480/sample_track_person.json")
+    args.device = "cpu"
+    args.sam_model_type = "vit_b"
+    args.output = Path("output.json")
+    args.debug = False
+    args.mask_save = False
+    args.output_video = Path("result.mp4")
+    args.track_data = json.load(open(args.track_data, "r"))
+    return args
 
 if __name__ == "__main__":
     print("Woo hoo. Let's go!")
@@ -626,7 +640,7 @@ if __name__ == "__main__":
             "positive_click_times": 0,
             "mask_save": args.mask_save,
             "multi_mask": {"mask_names": [], "masks": []},
-            "track_end_number": None,
+            "track_end_number": args,
             "resize_ratio": 1,
     }
     video_state = {
@@ -649,6 +663,7 @@ if __name__ == "__main__":
     points = args.track_data['points']
 
     template_frame, video_state, interactive_state, run_status=select_template(
+        model,
         points['frame'], 
         video_state, 
         interactive_state
@@ -711,6 +726,8 @@ if __name__ == "__main__":
     Path(args.output).open('w').write(json.dumps({
         'results': outputs
     }, indent=4))
+
+
 # title = """<p><h1 align="center">Track-Anything</h1></p>
 #     """
 # description = """<p>Gradio demo for Track Anything, a flexible and interactive tool for video object tracking, segmentation, and inpainting. I To use it, simply upload your video, or click one of the examples to load them. Code: <a href="https://github.com/gaomingqi/Track-Anything">https://github.com/gaomingqi/Track-Anything</a> <a href="https://huggingface.co/spaces/watchtowerss/Track-Anything?duplicate=true"><img style="display: inline; margin-top: 0em; margin-bottom: 0em" src="https://bit.ly/3gLdBN6" alt="Duplicate Space" /></a></p>"""
