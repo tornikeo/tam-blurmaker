@@ -108,8 +108,7 @@ def get_frames_from_video(model, video_input, video_state={}):
             ret, frame = cap.read()
             if ret == True:
                 current_memory_usage = psutil.virtual_memory().percent
-                if i % 4 == 0 and i >= video_state['track_start_number']:
-                    frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                 if current_memory_usage > 90:
                     operation_log = [
                         (
