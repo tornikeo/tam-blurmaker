@@ -1,0 +1,15 @@
+{
+    "start": {
+        "frame": 200
+    },
+    "points": [
+        {
+            "frame": 0,
+            "pos": [180,176],
+            "label": 1
+        }
+    ],
+    "end": {
+        "frame": 300
+    }
+}
