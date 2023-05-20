@@ -26,7 +26,7 @@ print("Woo hoo. Let's go!")
 # args = default_args()
 args = argparse.Namespace()
 args.input = Path("test_sample/family_480.mp4")
-args.track_data = Path("test_sample/family_480/blue_shirt_kid_2.json")
+args.track_data = Path("test_sample/family_480/sample_track_person.json")
 args.device = "cuda" if torch.cuda.is_available() else "cpu"
 args.sam_model_type = "vit_b"
 args.output = Path("output.json")
