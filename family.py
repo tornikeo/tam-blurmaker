@@ -12,6 +12,8 @@
 
 import sys
 import io
+import json
+
 save_stdout = sys.stdout
 sys.stdout = open('stdout.txt', 'w')
 sys.stderr = open('stderr.txt', 'w')
