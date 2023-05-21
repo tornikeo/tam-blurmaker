@@ -29,9 +29,28 @@ print("Woo hoo. Let's go!")
 # args, defined in track_anything.py
 # args = parse_argument()
 # args = default_args()
-args = argparse.Namespace()
-args.input = Path("test_sample/family_480.mp4")
-args.track_data = Path("test_sample/family_480/blue_dress_lady_face.json")
+# args = argparse.Namespace()
+# args.input = Path("test_sample/family_480.mp4")
+# args.track_data = Path("test_sample/family_480/blue_dress_lady_face.json")
+# try:
+#     args.device = "cuda" if torch.cuda.is_available() else "cpu"
+#     torch.nn.functional.conv2d(torch.zeros(1, 1).to(args.device), torch.zeros(1, 1).to(args.device))
+# except RuntimeError as e:
+#     print(e)
+#     args.device = "cpu"
+# args.sam_model_type = "vit_b"
+# args.output = Path("output.json")
+# args.debug = False
+# args.mask_save = False
+# args.output_video = Path("result.mp4")
+# args.track_data = json.load(open(args.track_data, "r"))
+
+args = argparse.ArgumentParser()
+args.add_argument('--input', type=str, default='test_sample/family_480.mp4')
+args.add_argument('--track_data', type=str, default='test_sample/family_480/blue_dress_lady_face.json')
+
+args = args.parse_args()
+
 try:
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.nn.functional.conv2d(torch.zeros(1, 1).to(args.device), torch.zeros(1, 1).to(args.device))
@@ -44,6 +63,7 @@ args.debug = False
 args.mask_save = False
 args.output_video = Path("result.mp4")
 args.track_data = json.load(open(args.track_data, "r"))
+
 # return args
 
 
