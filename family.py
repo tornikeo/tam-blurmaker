@@ -10,6 +10,11 @@
 
 # In[2]:
 
+import sys
+import io
+save_stdout = sys.stdout
+sys.stdout = open('stdout.txt', 'w')
+sys.stderr = open('stderr.txt', 'w')
 
 import torch
 if torch.cuda.is_available():
@@ -27,8 +32,12 @@ print("Woo hoo. Let's go!")
 args = argparse.Namespace()
 args.input = Path("test_sample/family_480.mp4")
 args.track_data = Path("test_sample/family_480/blue_dress_lady_face.json")
-# args.device = "cuda" if torch.cuda.is_available() else "cpu"
-args.device = "cpu"
+try:
+    args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    torch.nn.functional.conv2d(torch.zeros(1, 1).to(args.device), torch.zeros(1, 1).to(args.device))
+except RuntimeError as e:
+    print(e)
+    args.device = "cpu"
 args.sam_model_type = "vit_b"
 args.output = Path("output.json")
 args.debug = False
@@ -190,8 +199,14 @@ for frame_num, mask in enumerate(video_state["masks"]):
         # Write outputs in {1: {'class': 0, 'bbox': [0, 0, 0, 0], 'score': ''}} format
         outputs.append({frame_num: {'class': 0, 'bbox': bbox, 'score': ''}})
 
+sys.stdout = save_stdout
+
 # Write outputs to json
 Path(args.output).open('w').write(json.dumps({
     'results': outputs
 }, indent=4))
 
+print(json.dumps({
+    'results': outputs
+    }, indent=4)
+)
