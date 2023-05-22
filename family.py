@@ -48,24 +48,52 @@ print("Woo hoo. Let's go!")
 # args.track_data = json.load(open(args.track_data, "r"))
 
 args = argparse.ArgumentParser()
-args.add_argument('--input', type=str, default='test_sample/family_480.mp4')
-args.add_argument('--track_data', type=str, default='test_sample/family_480/blue_dress_lady_face.json')
+args.add_argument('--input', type=str, default='test_sample/family_144.mp4')
+args.add_argument('--track_data', type=str,) # default='test_sample/family_480/blue_dress_lady_face.json')
+args.add_argument('--track_data_raw', type=str, default='[[1008, 85, 23, 1, 1999]]') #default='test_sample/family_144/blue_dress_lady_face.json')
 
 args = args.parse_args()
 
 try:
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
-    torch.nn.functional.conv2d(torch.zeros(1, 1).to(args.device), torch.zeros(1, 1).to(args.device))
+    # Test out that conv2d works
+    torch.nn.functional.conv2d(torch.randn(8, 4, 3, 3).to(args.device),
+                                torch.randn(1, 4, 5, 5).to(args.device), padding=1)
 except RuntimeError as e:
-    print(e)
+    print(f"It seems like GPU is not an option because of the following error: {e}")
     args.device = "cpu"
 args.sam_model_type = "vit_b"
 args.output = Path("output.json")
 args.debug = False
 args.mask_save = False
 args.output_video = Path("result.mp4")
-args.track_data = json.load(open(args.track_data, "r"))
+# {
+#     "points": [
+#         {
+#             "frame": 1008,
+#             "pos": [286,79],
+#             "label": 1
+#         }
+#     ],
+#     "track_end_number": 1226
+# }
 
+if args.track_data is not None:
+    args.track_data = json.load(open(args.track_data, "r"))
+else:
+    args.track_data = json.loads(args.track_data_raw)
+    start_frame, x, y, label, end_frame = args.track_data[0]
+    args.track_data = {
+        "points": [
+            {   
+                "frame": start_frame,
+                "pos": [x, y],
+                "label": label
+            }
+        ],
+        "track_end_number": end_frame
+    }
+print(f'args.track_data: {args.track_data}')
 # return args
 
 
