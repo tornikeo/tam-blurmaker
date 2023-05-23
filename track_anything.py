@@ -1,6 +1,6 @@
 import PIL
 from tqdm import tqdm
-
+import sys
 from tools.interact_tools import SamControler
 from tracker.base_tracker import BaseTracker
 from inpainter.base_inpainter import BaseInpainter
@@ -46,7 +46,7 @@ class TrackingAnything:
     #     mask, logit, painted_image = self.samcontroler.interact_loop(image, same_image_flag, points, labels, logits, multimask)
     #     return mask, logit, painted_image
 
-    def generator(self, images: list, template_mask: np.ndarray):
+    def generator(self, images: list, template_mask: np.ndarray, callback = None):
         masks = []
         logits = []
         painted_images = []
@@ -62,6 +62,10 @@ class TrackingAnything:
                 masks.append(mask)
                 logits.append(logit)
                 painted_images.append(painted_image)
+            if callback is not None:
+                callback(
+                    i, masks, logits, painted_images,
+                )
         return masks, logits, painted_images
 
 
