@@ -38,14 +38,14 @@ def return_stdout():
 # --track_object "[202, 264, 4, 294, 74]" --frame_start 202 --frame_end 410 --input /Users/maciejkrupowies/.bmcache/pexels-free-videos-853889-1920x1080-25fps
 args = argparse.ArgumentParser()
 args.add_argument('--input', type=str, default='test_sample/frames_family_144')
-args.add_argument('--frame_start', type=int, default=0,) # default='test_sample/family_480/blue_dress_lady_face.json')
+args.add_argument('--frame_start', type=int, default=1008,) # default='test_sample/family_480/blue_dress_lady_face.json')
 args.add_argument('--frame_end', type=int, default=3000) # default='test_sample/family_480/blue_dress_lady_face.json')
 # {firstFrame, x_min, y_min, x_max, y_max}
 args.add_argument('--track_object', type=str, default='[[1008, 85, 23, 86, 24]]') #default='test_sample/family_144/blue_dress_lady_face.json')
-args.add_argument('--silent', type=int, default=1) #default='test_sample/family_144/blue_dress_lady_face.json')
+args.add_argument('--debug', action="store_true", default=False) #default='test_sample/family_144/blue_dress_lady_face.json')
 args = args.parse_args()
 
-if args.silent:
+if not args.debug:
     redirect_stdout()
 
 args.sam_model_type = "vit_b"
@@ -115,23 +115,22 @@ print("Woo hoo. Let's go!")
 
 args.track_data = json.loads(args.track_object)
 start_frame, x_min, y_min, x_max, y_max = args.track_data[0]
+assert start_frame == args.frame_start, "--track_object [start_frame,...] must be equal to --frame_start"
 print('WARNING: Currently only one label (label 0) is supported.')
 print('WARNING: Currently the BBOX is reduced to a single middle point at the center (x,y).')
 print('WARNING: Currently --frame_start is forced to be equal to the first --track_object BBOX frameNum.')
 args.track_data = dict(
-    start_frame = 0,
-    end_frame = args.frame_end,
+    frame_end = args.frame_end,
     bboxes = [
         dict(
-            label = 0,
             frame = start_frame,
+            label = 0,
             x_min = x_min,
             y_min = y_min,
             x_max = x_max,
             y_max = y_max,
         )
     ]
-
 )
 print(f'args.track_data: {args.track_data}')
 # args.track_data = {
@@ -191,38 +190,51 @@ e2fgvi_checkpoint = download_checkpoint_from_google_drive(
 model = TrackingAnything(SAM_checkpoint, xmem_checkpoint, None, args)
 # video_input: /tmp/182f5d11c044d7004053ecf4b9f0678894a151ab/mall_480.mp4
 # video_state: {'user_name': '', 'video_name': '', 'origin_images': None, 'painted_images': None, 'masks': None, 'inpaint_masks': None, 'logits': None, 'select_frame_number': 0, 'fps': 30}
-interactive_state = {
-    "inference_times": 0,
-    "negative_click_times": 0,
-    "positive_click_times": 0,
-    "mask_save": args.mask_save,
-    "multi_mask": {"mask_names": [], "masks": []},
-    "track_end_number": None if args.track_data['end_frame'] == -1 else args.track_data['end_frame'],
-    "resize_ratio": 1,
-}
-video_state = {
-    "user_name": "",
-    "video_name": "",
-    "origin_images": None,
-    "painted_images": None,
-    "masks": None,
-    "inpaint_masks": None,
-    "logits": None,
-    "select_frame_number": 0,
-    "fps": 30,
-}
+# interactive_state = {
+#     "inference_times": 0,
+#     "negative_click_times": 0,
+#     "positive_click_times": 0,
+#     "mask_save": args.mask_save,
+#     "multi_mask": {"mask_names": [], "masks": []},
+#     "track_end_number": None if args.track_data['end_frame'] == -1 else args.track_data['end_frame'],
+#     "resize_ratio": 1,
+# }
+# video_state = {
+#     "user_name": "",
+#     "video_name": "",
+#     "origin_images": None,
+#     "painted_images": None,
+#     "masks": None,
+#     "inpaint_masks": None,
+#     "logits": None,
+#     "select_frame_number": 0,
+#     "fps": 30,
+# }
 
 
 # In[5]:
 
 
-video_state, video_info, origin_image = get_frames_from_video(
-    model,
-    args.input,
-    video_state,
-)
+# video_state, video_info, origin_image = get_frames_from_video(
+#     model,
+#     args.input,
+#     video_state,
+# )
+import cv2
+
+frames = [
+    cv2.cvtColor(
+        cv2.imread(str(p)),
+        cv2.COLOR_BGR2RGB
+    ) for p in sorted(list(Path(args.input).glob('*')))
+]
+masks = [np.zeros((frames[0].shape[0], frames[0].shape[1]), np.uint8)]
+logits = [None] * len(frames)
+fps = 25
 
 
+model.samcontroler.sam_controler.reset_image()
+# model.samcontroler.sam_controler.set_image(frames[0])
 # In[6]:
 
 
@@ -234,47 +246,68 @@ video_state, video_info, origin_image = get_frames_from_video(
 # points = args.track_data['points']
 bbox = args.track_data['bboxes'][0]
 
-template_frame, video_state, interactive_state, run_status=select_template(
-    model,
-    bbox['frame'], 
-    video_state, 
-    interactive_state
+# template_frame, video_state, interactive_state, run_status=select_template(
+#     model,
+#     bbox['frame'], 
+#     video_state, 
+#     interactive_state
+# )
+model.samcontroler.sam_controler.reset_image()
+model.samcontroler.sam_controler.set_image(
+    frames[bbox['frame']]
 )
-
 
 # In[8]:
 
 
-evt = argparse.Namespace()
-evt.index = [0, 0]
+# evt = argparse.Namespace()
+# evt.index = [0, 0]
 
 x_mid = round((bbox['x_min'] + bbox['x_max']) / 2)
 y_mid = round((bbox['y_min'] + bbox['y_max']) / 2)
 print(f"Rounding bbox to center point: ({x_mid}, {y_mid})")
 
-template_frame, video_state, interactive_state, run_status = sam_refine(
-    model=model,
-    video_state=video_state,
-    # point_prompt=sam_refine_args['point_prompt'],
-    point_prompt=None,#"Positive",
-    click_state=None,#[[180,176],[1]],
-    # prompt={
-    #     "prompt_type": ["click"],
-    #     "input_point": [points[0]['pos']],#[[180,176]],
-    #     "input_label": [points[0]['label']],
-    #     "multimask_output": "False",
-    # },
-    prompt=dict(
-        prompt_type=["click"],
-        input_point=[[x_mid, y_mid]],
-        input_label=[bbox['label']],
-        multimask_output="False",
-    ),
-    interactive_state=interactive_state,
-    evt=evt,
+# template_frame, video_state, interactive_state, run_status = sam_refine(
+#     model=model,
+#     video_state=video_state,
+#     # point_prompt=sam_refine_args['point_prompt'],
+#     point_prompt=None,#"Positive",
+#     click_state=None,#[[180,176],[1]],
+#     # prompt={
+#     #     "prompt_type": ["click"],
+#     #     "input_point": [points[0]['pos']],#[[180,176]],
+#     #     "input_label": [points[0]['label']],
+#     #     "multimask_output": "False",
+#     # },
+#     prompt=dict(
+#         prompt_type=["click"],
+#         input_point=[[x_mid, y_mid]],
+#         input_label=[bbox['label']],
+#         multimask_output="False",
+#     ),
+#     interactive_state=interactive_state,
+#     evt=evt,
+# )
+
+# model.samcontroler.sam_controler.reset_image()
+# model.samcontroler.sam_controler.set_image(
+#     video_state["origin_images"][video_state["select_frame_number"]]
+# )
+prompt=dict(
+    prompt_type=["click"],
+    input_point=[[x_mid, y_mid]],
+    input_label=[bbox['label']],
+    multimask_output="False",
 )
 
+template_mask, logit, painted_image = model.first_frame_click(
+    image=frames[bbox['frame']],
+    points=np.array(prompt["input_point"]),
+    labels=np.array(prompt["input_label"]),
+    multimask=prompt["multimask_output"],
+)
 
+# template_mask = painted_image
 # In[9]:
 from typing import List
 
@@ -288,28 +321,6 @@ def bbox2(img):
         return rmin, rmax, cmin, cmax
     except IndexError:
         return None
-
-def on_each_prediction(i: int, 
-                       masks: List[np.ndarray], 
-                       logits: List[np.ndarray], 
-                       painted_images: List[np.ndarray]):
-# for frame_num, mask in enumerate(video_state["masks"]):
-    # print(mask)
-    # print(i)
-    # mask = np.load(mask)
-    # Get bounding box [x,y,x,y] from binary mask
-    saved = sys.stdout
-    sys.stdout = sys.__stdout__
-    bbox = bbox2(masks[-1] > 0)
-    if bbox is None:
-        bbox = [0, 0, 0, 0]
-    else:
-        assert False, f"i={i}, bbox={bbox}"
-    label = 0
-    # Write outputs in {1: {'class': 0, 'bbox': [0, 0, 0, 0], 'score': ''}} format
-    print(json.dumps({i: {label: {'class': 0, 'bbox': bbox, 'score': ''}}}))
-    sys.stdout = saved
-
 
 # video_output, video_state, interactive_state, run_status = vos_tracking_video(
 #     model=model,
@@ -343,40 +354,40 @@ from tqdm import tqdm
 #     video_state["masks"][video_state["select_frame_number"]] = template_mask
 # else:
     
-template_mask = video_state["masks"][video_state["select_frame_number"]]
-fps = video_state["fps"]
+# template_mask = masks[video_state["select_frame_number"]]
+# fps = video_state["fps"]
 
-masks = []
-logits = []
-painted_images = []
-images = video_state["origin_images"]
+# masks = []
+# logits = []
+# painted_images = []
+# images = video_state["origin_images"]
+
 sys.stdout = sys.__stdout__
 label = 0
-for i in range(len(images)):
-    if i == video_state["select_frame_number"]:
+for i, frame in enumerate(frames):
+    det_bbox = [0, 0, 0, 0]
+    if i == bbox['frame']:
     # if i == 0:
-        mask, logit, painted_image = model.xmem.track(images[i], template_mask)
-        masks.append(mask)
-        logits.append(logit)
-        painted_images.append(painted_image)  
-
-        bbox = bbox2(masks[-1] > 0)
-        if bbox is None:
-            bbox = [0, 0, 0, 0]
-        print(json.dumps({i: {label: {'class': 0, 'bbox': bbox, 'score': ''}}}))
-    elif i > video_state["select_frame_number"] and i < video_state.get("track_end_number", len(images) - 1):
-        mask, logit, painted_image = model.xmem.track(images[i])
-        masks.append(mask)
-        logits.append(logit)
-        painted_images.append(painted_image)
-        breakpoint()
-        bbox = bbox2(masks[-1] > 0)
-        if bbox is None:
-            bbox = [0, 0, 0, 0]
+        mask, logit, painted_image = model.xmem.track(frame, template_mask)
+        # masks.append(mask)
+        # logits.append(logit)
+        # painted_images.append(painted_image)
+        det_bbox = bbox2(mask > 0)
+        # if bbox is not None:
+        #     bbox = [0, 0, 0, 0]
+        # print(json.dumps({i: {label: {'class': 0, 'bbox': bbox, 'score': ''}}}))
+    elif i > bbox['frame'] and i < args.frame_end:
+        mask, logit, painted_image = model.xmem.track(frame)
+        # masks.append(mask)
+        # logits.append(logit)
+        # painted_images.append(painted_image)
+        # breakpoint()
+        det_bbox = bbox2(mask > 0)
         # Write outputs in {1: {'class': 0, 'bbox': [0, 0, 0, 0], 'score': ''}} format
-        print(json.dumps({i: {label: {'class': 0, 'bbox': bbox, 'score': ''}}}))
-    else:
-        print(json.dumps({i: {label: {'class': 0, 'bbox': [0,0,0,0], 'score': ''}}}))
+        # print(json.dumps({i: {label: {'class': 0, 'bbox': bbox, 'score': ''}}}))
+    if det_bbox is None:
+        det_bbox = [0, 0, 0, 0]
+    print(json.dumps({i: {label: {'class': 0, 'bbox': det_bbox, 'score': ''}}}))
 
 # In[10]:
 
@@ -392,7 +403,7 @@ for i in range(len(images)):
 #         outputs.append({frame_num: {'class': 0, 'bbox': bbox, 'score': ''}})
 
 # sys.stdout = save_stdout
-# if args.silent:
+# if not args.debug:
 #     return_stdout()
 
 # # Write outputs to json
