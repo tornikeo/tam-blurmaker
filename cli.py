@@ -366,6 +366,7 @@ from tqdm import tqdm
 
 sys.stdout = sys.__stdout__
 label = 0
+
 for i, frame in enumerate(frames):
     det_bbox = [0, 0, 0, 0]
     if i == bbox['frame']:
@@ -389,7 +390,10 @@ for i, frame in enumerate(frames):
         # print(json.dumps({i: {label: {'class': 0, 'bbox': bbox, 'score': ''}}}))
     if det_bbox is None:
         det_bbox = [0, 0, 0, 0]
-    print(json.dumps({i: {label: {'class': 0, 'bbox': det_bbox, 'score': ''}}}))
+    
+    # print(json.dumps({i: {label: {'class': 0, 'bbox': det_bbox, 'score': ''}}}))
+    # sample output `197: {1: {'class': 0, 'bbox': [105, 98, 149, 126], 'score': ''}}`
+    print(i, ": {", label, ": {'class': 0, 'bbox': ", det_bbox, ", 'score': ''}}")
 
 # In[10]:
 
