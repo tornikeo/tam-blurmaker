@@ -221,12 +221,14 @@ model = TrackingAnything(SAM_checkpoint, xmem_checkpoint, None, args)
 #     video_state,
 # )
 import cv2
+files = sorted(list(Path(args.input).glob('*.jpg')))
+print(f"Opening files: {files[:3]}...{files[-3:]}, len: {len(files)}")
 
 frames = [
     cv2.cvtColor(
         cv2.imread(str(p)),
-        cv2.COLOR_BGR2RGB
-    ) for p in sorted(list(Path(args.input).glob('*.jpg')))
+        cv2.COLOR_BGR2RGB,
+    ) for p in files
 ]
 masks = [np.zeros((frames[0].shape[0], frames[0].shape[1]), np.uint8)]
 logits = [None] * len(frames)
