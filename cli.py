@@ -393,7 +393,7 @@ for i, frame in enumerate(frames):
     
     # print(json.dumps({i: {label: {'class': 0, 'bbox': det_bbox, 'score': ''}}}))
     # sample output `197: {1: {'class': 0, 'bbox': [105, 98, 149, 126], 'score': ''}}`
-    print(i, ": {", label, ": {'class': 0, 'bbox': ", det_bbox, ", 'score': ''}}")
+    print(i, ": {", label, ": {'class': 0, 'bbox': ", tuple(det_bbox), ", 'score': ''}}")
 
 # In[10]:
 
