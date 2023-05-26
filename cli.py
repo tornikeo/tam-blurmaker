@@ -226,7 +226,7 @@ frames = [
     cv2.cvtColor(
         cv2.imread(str(p)),
         cv2.COLOR_BGR2RGB
-    ) for p in sorted(list(Path(args.input).glob('*')))
+    ) for p in sorted(list(Path(args.input).glob('*.jpg')))
 ]
 masks = [np.zeros((frames[0].shape[0], frames[0].shape[1]), np.uint8)]
 logits = [None] * len(frames)
