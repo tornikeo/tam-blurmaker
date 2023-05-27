@@ -420,10 +420,10 @@ for i, frame in enumerate(frames):
         if args.cap_frame_size is not None and \
             (max(frames[0].shape) > args.cap_frame_size):
             # det_bbox = [round(v * original_frame_dims[0] / resized_frame_dims[0]) for v in det_bbox]
-            det_bbox[0] = round(det_bbox[0] * original_frame_dims[0] / resized_frame_dims[0])
-            det_bbox[1] = round(det_bbox[1] * original_frame_dims[1] / resized_frame_dims[1])
-            det_bbox[2] = round(det_bbox[2] * original_frame_dims[0] / resized_frame_dims[0])
-            det_bbox[3] = round(det_bbox[3] * original_frame_dims[1] / resized_frame_dims[1])
+            det_bbox[0] = round(det_bbox[0] * original_frame_dims[1] / resized_frame_dims[1])
+            det_bbox[1] = round(det_bbox[1] * original_frame_dims[0] / resized_frame_dims[0])
+            det_bbox[2] = round(det_bbox[2] * original_frame_dims[1] / resized_frame_dims[1])
+            det_bbox[3] = round(det_bbox[3] * original_frame_dims[0] / resized_frame_dims[0])
         # FIXES: Remove output for frames out of range (eg. don't show bbox 0,0,0,0 when time_start was 300 and end 700 for all other frames)
         print(i, ": {", label, ": {'class': 0, 'bbox': ", tuple(det_bbox), ", 'score': ''}}")
         # masks.append(mask)
