@@ -133,7 +133,7 @@ args.track_data = json.loads(args.track_object)
 start_frame, x_min, y_min, x_max, y_max = args.track_data[0]
 assert start_frame == args.frame_start, "--track_object [start_frame,...] must be equal to --frame_start"
 print('WARNING: Currently only one label (label 0) is supported.')
-print('WARNING: Currently the BBOX is reduced to a single middle point at the center (x,y).')
+# print('WARNING: Currently the BBOX is reduced to a single middle point at the center (x,y).')
 print('WARNING: Currently --frame_start is forced to be equal to the first --track_object BBOX frameNum.')
 args.track_data = dict(
     frame_end = args.frame_end,
