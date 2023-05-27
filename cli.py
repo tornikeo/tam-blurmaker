@@ -37,22 +37,41 @@ def return_stdout():
 # --track_object "[]"
 # --track_object "[202, 264, 4, 294, 74]" --frame_start 202 --frame_end 410 --input /Users/maciejkrupowies/.bmcache/pexels-free-videos-853889-1920x1080-25fps
 args = argparse.ArgumentParser()
-args.add_argument('--input', type=str, default='test_sample/frames_family_144')
-args.add_argument('--frame_start', type=int, default=1008,) # default='test_sample/family_480/blue_dress_lady_face.json')
-args.add_argument('--frame_end', type=int, default=3000) # default='test_sample/family_480/blue_dress_lady_face.json')
+# args.add_argument('--input', type=str, default='test_sample/frames_family_144')
+
+# {
+#     "points": [
+#         {
+#             "frame": 444,
+#             "pos": [360,110],
+#             "label": 1
+#         }
+#     ],
+#     "track_end_number": 1924
+
+args.add_argument('--input', type=str, default='test_sample/frames_family_480')
+args.add_argument('--frame_start', type=int, default=444,) # default='test_sample/family_480/blue_dress_lady_face.json')
+args.add_argument('--frame_end', type=int, default=1924) # default='test_sample/family_480/blue_dress_lady_face.json')
 # {firstFrame, x_min, y_min, x_max, y_max}
-args.add_argument('--track_object', type=str, default='[[1008, 85, 23, 86, 24]]') #default='test_sample/family_144/blue_dress_lady_face.json')
-args.add_argument('--debug', action="store_true", default=False) #default='test_sample/family_144/blue_dress_lady_face.json')
+# args.add_argument('--track_object', type=str, default='[[1008, 85, 23, 86, 24]]') #default='test_sample/family_144/blue_dress_lady_face.json')
+args.add_argument('--track_object', type=str, default='[[444, 360, 110, 360, 110]]') #default='test_sample/family_144/blue_dress_lady_face.json')
+args.add_argument('--debug', action="store_true") #default='test_sample/family_144/blue_dress_lady_face.json')
+args.add_argument('--cap_frame_size', type=int, default=None) #default='test_sample/family_144/blue_dress_lady_face.json')
+
 args = args.parse_args()
 
 if not args.debug:
     redirect_stdout()
 
+if args.cap_frame_size is not None:
+    print(f"WARNINIG: cap_frame_size is set to {args.cap_frame_size}. This will reduce the frame size to AT MOST {args.cap_frame_size}x{args.cap_frame_size}.")
+
 args.sam_model_type = "vit_b"
-args.debug = False
+import time
+# args.debug = False
+args.output_video = Path(f"debug-video-output-{time.time_ns()}.mp4")
 args.mask_save = False
 args.output = Path("output.json")
-args.output_video = Path("result.mp4")
 
 try:
     args.device = 'cuda'
@@ -234,7 +253,19 @@ masks = [np.zeros((frames[0].shape[0], frames[0].shape[1]), np.uint8)]
 logits = [None] * len(frames)
 fps = 25
 
+if args.cap_frame_size is not None and \
+    (max(frames[0].shape) > args.cap_frame_size):
 
+    original_frame_dims = (frames[0].shape[0], frames[0].shape[1])
+    print(f"Reducing frame size to {args.cap_frame_size}x{args.cap_frame_size}...")
+    frames = [cv2.resize(frame, (args.cap_frame_size, args.cap_frame_size)) for frame in frames]
+    masks = [cv2.resize(mask, (args.cap_frame_size, args.cap_frame_size)) for mask in masks]
+    resized_frame_dims = (frames[0].shape[0], frames[0].shape[1])
+    for key in ['x_min', 'x_max']:
+        args.track_data['bboxes'][0][key] = round(args.track_data['bboxes'][0][key] * resized_frame_dims[1] / original_frame_dims[1])
+    for key in ['y_min', 'y_max']:
+        args.track_data['bboxes'][0][key] = round(args.track_data['bboxes'][0][key] * resized_frame_dims[0] / original_frame_dims[0])
+    print(f"After rescaling the bbox is now: {args.track_data['bboxes'][0]}")
 model.samcontroler.sam_controler.reset_image()
 # model.samcontroler.sam_controler.set_image(frames[0])
 # In[6]:
@@ -367,33 +398,61 @@ from tqdm import tqdm
 sys.stdout = sys.__stdout__
 label = 0
 
+all_painted_images: List[np.ndarray] = []
+
 for i, frame in enumerate(frames):
-    det_bbox = [0, 0, 0, 0]
-    if i == bbox['frame']:
+    if i >= bbox['frame'] and i < args.frame_end:
     # if i == 0:
-        mask, logit, painted_image = model.xmem.track(frame, template_mask)
+        mask, logit, painted_image = model.xmem.track(
+                frame,
+                first_frame_annotation=template_mask if i == bbox['frame'] else None,
+            )
+        det_bbox = bbox2(mask > 0)
+        if det_bbox is None:
+            det_bbox = [0, 0, 0, 0]
+
+        all_painted_images.append(painted_image)
+
+        if args.cap_frame_size is not None and \
+            (max(frames[0].shape) > args.cap_frame_size):
+            # det_bbox = [round(v * original_frame_dims[0] / resized_frame_dims[0]) for v in det_bbox]
+            det_bbox[0] = round(det_bbox[0] * original_frame_dims[0] / resized_frame_dims[0])
+            det_bbox[1] = round(det_bbox[1] * original_frame_dims[1] / resized_frame_dims[1])
+            det_bbox[2] = round(det_bbox[2] * original_frame_dims[0] / resized_frame_dims[0])
+            det_bbox[3] = round(det_bbox[3] * original_frame_dims[1] / resized_frame_dims[1])
+        # FIXES: Remove output for frames out of range (eg. don't show bbox 0,0,0,0 when time_start was 300 and end 700 for all other frames)
+        print(i, ": {", label, ": {'class': 0, 'bbox': ", tuple(det_bbox), ", 'score': ''}}")
         # masks.append(mask)
         # logits.append(logit)
         # painted_images.append(painted_image)
-        det_bbox = bbox2(mask > 0)
         # if bbox is not None:
         #     bbox = [0, 0, 0, 0]
         # print(json.dumps({i: {label: {'class': 0, 'bbox': bbox, 'score': ''}}}))
-    elif i > bbox['frame'] and i < args.frame_end:
-        mask, logit, painted_image = model.xmem.track(frame)
+    # elif i > bbox['frame'] and i < args.frame_end:
+        # mask, logit, painted_image = model.xmem.track(frame)
         # masks.append(mask)
         # logits.append(logit)
         # painted_images.append(painted_image)
         # breakpoint()
-        det_bbox = bbox2(mask > 0)
+        # det_bbox = bbox2(mask > 0)
         # Write outputs in {1: {'class': 0, 'bbox': [0, 0, 0, 0], 'score': ''}} format
         # print(json.dumps({i: {label: {'class': 0, 'bbox': bbox, 'score': ''}}}))
-    if det_bbox is None:
-        det_bbox = [0, 0, 0, 0]
     
-    # print(json.dumps({i: {label: {'class': 0, 'bbox': det_bbox, 'score': ''}}}))
-    # sample output `197: {1: {'class': 0, 'bbox': [105, 98, 149, 126], 'score': ''}}`
-    print(i, ": {", label, ": {'class': 0, 'bbox': ", tuple(det_bbox), ", 'score': ''}}")
+        # print(json.dumps({i: {label: {'class': 0, 'bbox': det_bbox, 'score': ''}}}))
+        # sample output `197: {1: {'class': 0, 'bbox': [105, 98, 149, 126], 'score': ''}}`
+    
+    # if i >= bbox['frame'] and i < args.frame_end:
+    #     print(i, ": {", label, ": {'class': 0, 'bbox': ", tuple(det_bbox), ", 'score': ''}}")
+
+# Fixes: Add debug video
+from cli_tools import generate_video_from_frames
+if args.debug:
+    print("Generating video from frames...")
+    video_output = generate_video_from_frames(
+        all_painted_images,
+        output_path=args.output_video,
+        fps=fps,
+    )  # import video_input to name the output video
 
 # In[10]:
 

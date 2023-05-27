@@ -13,3 +13,4 @@ result/
 *.json
 !test_sample/
 *.txt
+test_sample/frames_*
