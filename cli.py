@@ -400,7 +400,7 @@ def bbox2(img):
     try:
         rmin, rmax = np.where(rows)[0][[0, -1]].tolist()
         cmin, cmax = np.where(cols)[0][[0, -1]].tolist()
-        return rmin, rmax, cmin, cmax
+        return [rmin, rmax, cmin, cmax]
     except IndexError:
         return None
 
