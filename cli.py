@@ -55,8 +55,12 @@ args.add_argument('--frame_end', type=int, default=1924) # default='test_sample/
 # {firstFrame, x_min, y_min, x_max, y_max}
 # args.add_argument('--track_object', type=str, default='[[1008, 85, 23, 86, 24]]') #default='test_sample/family_144/blue_dress_lady_face.json')
 args.add_argument('--track_object', type=str, default='[[444, 360, 110, 360, 110]]') #default='test_sample/family_144/blue_dress_lady_face.json')
-args.add_argument('--debug', action="store_true") #default='test_sample/family_144/blue_dress_lady_face.json')
-args.add_argument('--cap_frame_size', type=int, default=None) #default='test_sample/family_144/blue_dress_lady_face.json')
+args.add_argument('--debug', action="store_true", 
+                  help="Print debug info to screen + create debug video at the end of the run") #default='test_sample/family_144/blue_dress_lady_face.json')
+args.add_argument('--cap_frame_size', type=int,
+                  help="If set, will reduce the frame size to AT MOST this value, e.g. if your video has 4k resolution, and you set this." \
+                          "to 1080, the frames will be reduced to 1080x1080. This is useful for reducing the compute requirements.",
+                   default=None) #default='test_sample/family_144/blue_dress_lady_face.json')
 
 args = args.parse_args()
 
