@@ -479,14 +479,15 @@ for i, frame in enumerate(frames):
                 det_bbox[3] * original_frame_dims[0] / resized_frame_dims[0]
             )
         # FIXES: Remove output for frames out of range (eg. don't show bbox 0,0,0,0 when time_start was 300 and end 700 for all other frames)
-        print(
-            i,
-            ": {",
-            label,
-            ": {'class': 0, 'bbox': ",
-            tuple(det_bbox),
-            ", 'score': ''}}",
-        )
+        # print(
+        #     i,
+        #     ": {",
+        #     label,
+        #     ": {'class': 0, 'bbox': ",
+        #     tuple(det_bbox),
+        #     ", 'score': ''}}",
+        # )
+        print(f'{i}: {{"1": {{"class": 0, "bbox": {det_bbox}, "score": ""}}}}')
         # masks.append(mask)
         # logits.append(logit)
         # painted_images.append(painted_image)
