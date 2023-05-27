@@ -22,16 +22,9 @@ import torch
 from matplotlib import pyplot as plt
 import argparse
 
-save_stdout = sys.stdout
-save_stderr = sys.stderr
-
 def redirect_stdout():
     sys.stdout = open('stdout.txt', 'w')
     sys.stderr = open('stderr.txt', 'w')
-
-def return_stdout():
-    sys.stdout = save_stdout
-    sys.stderr = save_stderr
 
 # Desired Args structure
 # --track_object "[]"
@@ -54,7 +47,7 @@ args.add_argument('--frame_start', type=int, default=444,) # default='test_sampl
 args.add_argument('--frame_end', type=int, default=1924) # default='test_sample/family_480/blue_dress_lady_face.json')
 # {firstFrame, x_min, y_min, x_max, y_max}
 # args.add_argument('--track_object', type=str, default='[[1008, 85, 23, 86, 24]]') #default='test_sample/family_144/blue_dress_lady_face.json')
-args.add_argument('--track_object', type=str, default='[[444, 360, 110, 360, 110]]') #default='test_sample/family_144/blue_dress_lady_face.json')
+args.add_argument('--track_object', type=str, default='[[444, 350, 100, 370, 120]]') #default='test_sample/family_144/blue_dress_lady_face.json')
 args.add_argument('--debug', action="store_true", 
                   help="Print debug info to screen + create debug video at the end of the run") #default='test_sample/family_144/blue_dress_lady_face.json')
 args.add_argument('--cap_frame_size', type=int,
@@ -300,9 +293,9 @@ model.samcontroler.sam_controler.set_image(
 # evt = argparse.Namespace()
 # evt.index = [0, 0]
 
-x_mid = round((bbox['x_min'] + bbox['x_max']) / 2)
-y_mid = round((bbox['y_min'] + bbox['y_max']) / 2)
-print(f"Rounding bbox to center point: ({x_mid}, {y_mid})")
+# x_mid = round((bbox['x_min'] + bbox['x_max']) / 2)
+# y_mid = round((bbox['y_min'] + bbox['y_max']) / 2)
+# print(f"Rounding bbox to center point: ({x_mid}, {y_mid})")
 
 # template_frame, video_state, interactive_state, run_status = sam_refine(
 #     model=model,
@@ -330,18 +323,26 @@ print(f"Rounding bbox to center point: ({x_mid}, {y_mid})")
 # model.samcontroler.sam_controler.set_image(
 #     video_state["origin_images"][video_state["select_frame_number"]]
 # )
-prompt=dict(
-    prompt_type=["click"],
-    input_point=[[x_mid, y_mid]],
-    input_label=[bbox['label']],
-    multimask_output="False",
-)
+# prompt=dict(
+#     prompt_type=["click"],
+#     input_point=[[x_mid, y_mid]],
+#     input_label=[bbox['label']],
+#     multimask_output="False",
+# )
 
-template_mask, logit, painted_image = model.first_frame_click(
+# template_mask, logit, painted_image = model.first_frame_click(
+#     image=frames[bbox['frame']],
+#     points=np.array(prompt["input_point"]),
+#     labels=np.array(prompt["input_label"]),
+#     multimask=prompt["multimask_output"],
+# )
+
+template_mask, logit, painted_image = model.samcontroler.first_frame_click(
     image=frames[bbox['frame']],
-    points=np.array(prompt["input_point"]),
-    labels=np.array(prompt["input_label"]),
-    multimask=prompt["multimask_output"],
+    box=np.array([bbox['x_min'], bbox['y_min'], bbox['x_max'], bbox['y_max']]),
+    # labels=np.array(prompt["input_label"]),
+    # multimask=prompt["multimask_output"],
+    multimask=False,
 )
 
 # template_mask = painted_image

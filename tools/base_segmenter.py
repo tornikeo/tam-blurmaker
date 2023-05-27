@@ -64,7 +64,7 @@ class BaseSegmenter:
         assert (
             self.embedded
         ), "prediction is called before set_image (feature embedding)."
-        assert mode in ["point", "mask", "both"], "mode must be point, mask, or both"
+        assert mode in ["point", "mask", "both", "box"], "mode must be point, mask, box, or both"
 
         if mode == "point":
             masks, scores, logits = self.predictor.predict(
@@ -91,7 +91,7 @@ class BaseSegmenter:
                 box=prompts["box"],
                 multimask_output=multimask,
             )
-        else:
+        else: 
             raise ("Not implement now!")
         # masks (n, h, w), scores (n,), logits (n, 256, 256)
         return masks, scores, logits

@@ -46,10 +46,11 @@ class SamControler:
     def first_frame_click(
         self,
         image: np.ndarray,
-        points: np.ndarray,
-        labels: np.ndarray,
+        points: np.ndarray = None,
+        labels: np.ndarray = None,
         multimask=True,
         mask_color=3,
+        box: np.ndarray = None,
     ):
         """
         it is used in first frame in video
@@ -57,39 +58,47 @@ class SamControler:
         """
         # self.sam_controler.set_image(image)
         origal_image = self.sam_controler.orignal_image
-        neg_flag = labels[-1]
-        if neg_flag == 1:
-            # find neg
-            prompts = {
-                "point_coords": points,
-                "point_labels": labels,
-            }
-            masks, scores, logits = self.sam_controler.predict(
-                prompts, "point", multimask
-            )
-            mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores), :, :]
-            prompts = {
-                "point_coords": points,
-                "point_labels": labels,
-                "mask_input": logit[None, :, :],
-            }
-            masks, scores, logits = self.sam_controler.predict(
-                prompts, "both", multimask
-            )
-            mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores), :, :]
+        if box is None:
+            neg_flag = labels[-1]
+            if neg_flag == 1:
+                # find neg
+                prompts = {
+                    "point_coords": points,
+                    "point_labels": labels,
+                }
+                masks, scores, logits = self.sam_controler.predict(
+                    prompts, "point", multimask
+                )
+                mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores), :, :]
+                prompts = {
+                    "point_coords": points,
+                    "point_labels": labels,
+                    "mask_input": logit[None, :, :],
+                }
+                masks, scores, logits = self.sam_controler.predict(
+                    prompts, "both", multimask
+                )
+                mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores), :, :]
+            else:
+                # find positive
+                prompts = {
+                    "point_coords": points,
+                    "point_labels": labels,
+                }
+                masks, scores, logits = self.sam_controler.predict(
+                    prompts, "point", multimask
+                )
+                mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores), :, :]
+
+            assert len(points) == len(labels)
         else:
-            # find positive
             prompts = {
-                "point_coords": points,
-                "point_labels": labels,
+                "box": box,
             }
             masks, scores, logits = self.sam_controler.predict(
-                prompts, "point", multimask
+                prompts, "box", multimask
             )
             mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores), :, :]
-
-        assert len(points) == len(labels)
-
         painted_image = mask_painter(
             image,
             mask.astype("uint8"),
@@ -98,25 +107,27 @@ class SamControler:
             contour_color,
             contour_width,
         )
-        painted_image = point_painter(
-            painted_image,
-            np.squeeze(points[np.argwhere(labels > 0)], axis=1),
-            point_color_ne,
-            point_alpha,
-            point_radius,
-            contour_color,
-            contour_width,
-        )
-        painted_image = point_painter(
-            painted_image,
-            np.squeeze(points[np.argwhere(labels < 1)], axis=1),
-            point_color_ps,
-            point_alpha,
-            point_radius,
-            contour_color,
-            contour_width,
-        )
-        painted_image = Image.fromarray(painted_image)
+
+        if points is not None:
+            painted_image = point_painter(
+                painted_image,
+                np.squeeze(points[np.argwhere(labels > 0)], axis=1),
+                point_color_ne,
+                point_alpha,
+                point_radius,
+                contour_color,
+                contour_width,
+            )
+            painted_image = point_painter(
+                painted_image,
+                np.squeeze(points[np.argwhere(labels < 1)], axis=1),
+                point_color_ps,
+                point_alpha,
+                point_radius,
+                contour_color,
+                contour_width,
+            )
+            painted_image = Image.fromarray(painted_image)
 
         return mask, logit, painted_image
 
