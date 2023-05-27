@@ -48,6 +48,11 @@ args = argparse.ArgumentParser()
 #     ],
 #     "track_end_number": 1924
 
+
+## Sample commands (mall_480):
+# python cli.py --input test_sample/frames_mall_480 --frame_start 0 --frame_end 700 --track_object "[[0, 164, 155, 185, 209]]"
+# python cli.py --input test_sample/frames_family_480 --frame_start 1031 --frame_end 1500 --track_object "[[1031, 216, 56, 295, 235]]"
+
 args.add_argument("--input", type=str, default="test_sample/frames_family_480")
 args.add_argument(
     "--frame_start",
