@@ -70,8 +70,14 @@ args.add_argument(
 args.add_argument(
     "--debug",
     action="store_true",
-    help="Print debug info to screen + create debug video at the end of the run",
+    help="Print debug info to screen",
 )  # default='test_sample/family_144/blue_dress_lady_face.json')
+
+args.add_argument(
+    '--debug-video',
+    action='store_true',
+    help='Create debug video at the end of the run',
+)
 args.add_argument(
     "--cap_frame_size",
     type=int,
@@ -522,8 +528,8 @@ for i, frame in enumerate(frames):
 # Fixes: Add debug video
 from cli_tools import generate_video_from_frames
 
-if args.debug:
-    print("Generating video from frames...")
+if args.debug_video:
+    # print("Generating video from frames...")
     video_output = generate_video_from_frames(
         all_painted_images,
         output_path=args.output_video,
