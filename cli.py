@@ -395,12 +395,21 @@ from typing import List
 
 
 def bbox2(img):
-    rows = np.any(img, axis=1)
-    cols = np.any(img, axis=0)
+    # rows = np.any(img, axis=1)
+    # cols = np.any(img, axis=0)
+    # try:
+    #     rmin, rmax = np.where(rows)[0][[0, -1]].tolist()
+    #     cmin, cmax = np.where(cols)[0][[0, -1]].tolist()
+    #     return [rmin, rmax, cmin, cmax]
+    # except IndexError:
+    #     return None
+    img_binary = img.astype(bool)
+    rows = np.any(img_binary, axis=1)
+    cols = np.any(img_binary, axis=0)
     try:
-        rmin, rmax = np.where(rows)[0][[0, -1]].tolist()
-        cmin, cmax = np.where(cols)[0][[0, -1]].tolist()
-        return [rmin, rmax, cmin, cmax]
+        y_min, y_max = np.where(rows)[0][[0, -1]].tolist()
+        x_min, x_max = np.where(cols)[0][[0, -1]].tolist()
+        return [x_min, y_min, x_max, y_max]
     except IndexError:
         return None
 
@@ -467,16 +476,16 @@ for i, frame in enumerate(frames):
         ):
             # det_bbox = [round(v * original_frame_dims[0] / resized_frame_dims[0]) for v in det_bbox]
             det_bbox[0] = round(
-                det_bbox[0] * original_frame_dims[1] / resized_frame_dims[1]
+                det_bbox[0] * original_frame_dims[0] / resized_frame_dims[0]
             )
             det_bbox[1] = round(
-                det_bbox[1] * original_frame_dims[0] / resized_frame_dims[0]
+                det_bbox[1] * original_frame_dims[1] / resized_frame_dims[1]
             )
             det_bbox[2] = round(
-                det_bbox[2] * original_frame_dims[1] / resized_frame_dims[1]
+                det_bbox[2] * original_frame_dims[0] / resized_frame_dims[0]
             )
             det_bbox[3] = round(
-                det_bbox[3] * original_frame_dims[0] / resized_frame_dims[0]
+                det_bbox[3] * original_frame_dims[1] / resized_frame_dims[1]
             )
         # FIXES: Remove output for frames out of range (eg. don't show bbox 0,0,0,0 when time_start was 300 and end 700 for all other frames)
         # print(
